@@ -43,8 +43,6 @@ const userSchemer = new mongoose.Schema({
 
     lowercase: true,
 
-    default: 0,
-
     validate(value) {
 
       if (!validator.isEmail(value)) {
@@ -65,7 +63,7 @@ const userSchemer = new mongoose.Schema({
 
     required: true,
 
-    minlength: 7,
+    minlength: 4,
 
     validate(value) {
 
@@ -182,8 +180,6 @@ userSchemer.methods.toPublicJSON = function () {
   delete returnUser.password
 
   delete returnUser.tokens
-
-  delete returnUser.age
 
   delete returnUser.avatar
 

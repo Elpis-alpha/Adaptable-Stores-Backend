@@ -3,16 +3,6 @@ const mongoose = require('mongoose')
 
 const itemSchema = new mongoose.Schema({
 
-  owner: {
-
-    type: mongoose.Schema.Types.ObjectId,
-
-    required: true,
-
-    ref: 'User'
-
-  },
-
   title: {
 
     type: String,
@@ -66,6 +56,22 @@ const itemSchema = new mongoose.Schema({
   ],
 
 }, { timestamps: true })
+
+
+
+// Private profile
+itemSchema.methods.toJSON = function () {
+
+  const item = this
+
+  const returnItem = item.toObject()
+
+  delete returnItem.pictures
+
+  return returnItem
+
+}
+
 
 // Item Model
 const Item = mongoose.model('Item', itemSchema)

@@ -11,10 +11,10 @@ const auth = async (req, res, next) => {
 
     const decoded = jsonwebtoken.verify(token, process.env.JWT_SECRET)
 
-    const user = await User.findOne({ _id: decoded._id, 'tokens.token':token })
+    const user = await User.findOne({ _id: decoded._id, 'tokens.token': token }, { avatar: 0, avatarSmall: 0 })
 
     if (!user) throw new Error('Invalid Token')
-      
+
     req.token = token
 
     req.user = user

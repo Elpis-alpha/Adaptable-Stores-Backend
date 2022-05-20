@@ -4,20 +4,18 @@ const Item = require('../models/Item')
 
 const auth = require('../middleware/auth')
 
+const { errorJson } = require('../middleware/errors')
+
+const itemAuth = require('../middleware/item-auth')
+
 const router = new express.Router()
 
 
 // Sends post request to create items
-router.post('/api/items', auth, async (req, res) => {
+router.post('/api/items/create', itemAuth, async (req, res) => {
 
-  const newItem = new Item({
-
-    ...req.body,
-
-    owner: req.user._id
-
-  })
-
+  const newItem = new Item(req.body)
+  
   try {
 
     await newItem.save()
@@ -26,7 +24,7 @@ router.post('/api/items', auth, async (req, res) => {
 
   } catch (error) {
 
-    res.status(400).send(error)
+    return errorJson(res, 400)
 
   }
 
@@ -34,7 +32,7 @@ router.post('/api/items', auth, async (req, res) => {
 
 
 // Sends get request to get all items
-router.get('/api/items', auth, async (req, res) => {
+router.get('/api/items/get-all', async (req, res) => {
 
   const sort = {}
 
@@ -50,19 +48,13 @@ router.get('/api/items', auth, async (req, res) => {
 
   try {
 
-    await req.user.populate({
+    await Item.find({}, {
 
-      path: 'items',
+      limit: parseInt(req.query.limit),
 
-      options: {
+      skip: parseInt(req.query.skip),
 
-        limit: parseInt(req.query.limit),
-
-        skip: parseInt(req.query.skip),
-
-        sort
-
-      }
+      sort
 
     })
 
@@ -70,21 +62,21 @@ router.get('/api/items', auth, async (req, res) => {
 
   } catch (error) {
 
-    res.status(500).send({ error: 'Server Error' })
+    return errorJson(res, 500)
 
   }
 
 })
 
 
-// Sends get request to get all specific item
-router.get('/api/items/:id', auth, async (req, res) => {
+// Sends get request to get a specific item
+router.get('/api/items/get', async (req, res) => {
 
-  const _id = req.params.id
+  const _id = req.query._id
 
   try {
 
-    const item = await Item.find({ _id, owner: req.user._id })
+    const item = await Item.find({ _id })
 
     if (!item) return res.status(404).send()
 
@@ -92,7 +84,7 @@ router.get('/api/items/:id', auth, async (req, res) => {
 
   } catch (error) {
 
-    res.status(404).send()
+    return errorJson(res, 404)
 
   }
 
@@ -100,13 +92,13 @@ router.get('/api/items/:id', auth, async (req, res) => {
 
 
 // Sends patch request to update items
-router.patch('/api/items/:id', auth, async (req, res) => {
+router.patch('/api/items/update', itemAuth, async (req, res) => {
 
-  const _id = req.params.id
+  const _id = req.query._id
 
   const updates = Object.keys(req.body)
 
-  const allowedUpdate = ['name', 'description']
+  const allowedUpdate = ['title', 'description', 'category', 'price']
 
   const isValidOp = updates.every(item => allowedUpdate.includes(item))
 
@@ -120,13 +112,13 @@ router.patch('/api/items/:id', auth, async (req, res) => {
 
     await item.save()
 
-    if (!item) return res.status(404).send({ error: 'Not Found' })
+    if (!item) return errorJson(res, 404)
 
     res.status(201).send(item)
 
   } catch (error) {
 
-    res.status(400).send(error)
+    return errorJson(res, 500)
 
   }
 
@@ -134,21 +126,21 @@ router.patch('/api/items/:id', auth, async (req, res) => {
 
 
 // Sends delete request to delete items
-router.delete('/api/items/:id', auth, async (req, res) => {
+router.delete('/api/items/delete', itemAuth, async (req, res) => {
 
-  const _id = req.params.id
+  const _id = req.query._id
 
   try {
 
-    const item = await Item.findOneAndDelete({ _id, owner: req.user._id })
+    const item = await Item.findOneAndDelete({ _id })
 
-    if (!item) return res.status(404).send()
+    if (!item) return errorJson(res, 404)
 
     res.send(item)
 
   } catch (error) {
 
-    res.status(500).send()
+    return errorJson(res, 500)
 
   }
 

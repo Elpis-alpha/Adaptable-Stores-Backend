@@ -7,6 +7,7 @@ const sharp = require('sharp')
 const User = require('../models/User')
 
 const auth = require('../middleware/auth')
+
 const { errorJson } = require('../middleware/errors')
 
 
@@ -28,7 +29,7 @@ const upload = multer({
 })
 
 // Sends post request to create new user
-router.post('/api/users', async (req, res) => {
+router.post('/api/users/create', async (req, res) => {
 
   const newUser = User(req.body)
 
@@ -52,7 +53,7 @@ router.post('/api/users', async (req, res) => {
 
 
 // sends get request to send verification mail to auth user
-router.get('/api/users/user/verify', auth, async (req, res) => {
+router.get('/api/users/verify', auth, async (req, res) => {
 
   const verifyUser = await req.user.sendVerificationEmail()
 
@@ -86,29 +87,19 @@ router.post('/api/users/login', async (req, res) => {
 // Sends post request to log user out
 router.post('/api/users/logout', auth, async (req, res) => {
 
-  try {
-
-    req.user.tokens = req.user.tokens.filter(item => item.token != req.token)
-
-    await req.user.save()
-
-    res.status(200).send({ message: 'Logout Successful' })
-
-  } catch (error) {
-
-    return errorJson(res, 500)
-
-  }
-
-})
-
-
-// Sends post request to log user out
-router.post('/api/users/logout/all', auth, async (req, res) => {
+  const all = req.query.all
 
   try {
 
-    req.user.tokens = []
+    if (all === "true") {
+
+      req.user.tokens = []
+
+    } else {
+
+      req.user.tokens = req.user.tokens.filter(item => item.token !== req.token)
+
+    }
 
     await req.user.save()
 
@@ -124,7 +115,7 @@ router.post('/api/users/logout/all', auth, async (req, res) => {
 
 
 // sends get request to fetch auth user
-router.get('/api/users/user', auth, async (req, res) => {
+router.get('/api/users/fetch', auth, async (req, res) => {
 
   res.send(req.user)
 
@@ -132,9 +123,9 @@ router.get('/api/users/user', auth, async (req, res) => {
 
 
 // sends get request to fetch user by id
-router.get('/api/users/id/:id', async (req, res) => {
+router.get('/api/users/id', async (req, res) => {
 
-  const _id = req.params.id
+  const _id = req.query.id
 
   try {
 
@@ -154,9 +145,9 @@ router.get('/api/users/id/:id', async (req, res) => {
 
 
 // sends get request to fetch user by id
-router.get('/api/users/email/:email', async (req, res) => {
+router.get('/api/users/email', async (req, res) => {
 
-  const email = req.params.email
+  const email = req.query.email
 
   try {
 
@@ -176,11 +167,11 @@ router.get('/api/users/email/:email', async (req, res) => {
 
 
 // Sends patch request to update users
-router.patch('/api/users/user', auth, async (req, res) => {
+router.patch('/api/users/update', auth, async (req, res) => {
 
   const updates = Object.keys(req.body)
 
-  const allowedUpdate = ['name', 'email', 'password', 'age']
+  const allowedUpdate = ['name']
 
   const isValidOp = updates.every(item => allowedUpdate.includes(item))
 
@@ -209,7 +200,7 @@ router.patch('/api/users/user', auth, async (req, res) => {
 
 
 // Sends patch request to change password
-router.post('/api/users/user/password', auth, async (req, res) => {
+router.post('/api/users/change-password', auth, async (req, res) => {
 
   try {
 
@@ -234,7 +225,7 @@ router.post('/api/users/user/password', auth, async (req, res) => {
 
 
 // Sends delete request to delete users
-router.delete('/api/users/user', auth, async (req, res) => {
+router.delete('/api/users/delete', auth, async (req, res) => {
 
   try {
 
@@ -255,30 +246,8 @@ router.delete('/api/users/user', auth, async (req, res) => {
 })
 
 
-// Sends post request to change image quality and convert to binary
-router.post('/api/to-img/pic', upload.single('image'), async (req, res) => {
-
-  const quality = parseInt(req.query.quality)
-
-  const width = parseInt(req.query.width)
-
-  try {
-
-    const buffer = await sharp(req.file.buffer).resize({ width }).png({ quality }).toBuffer()
-
-    res.send({ buffer })
-
-  } catch (error) {
-
-    return errorJson(res, 400)
-
-  }
-
-}, (error, req, res, next) => errorJson(res, 500))
-
-
 // Sends post request to create and upload the users profile avatar
-router.post('/api/users/user/avatar', auth, upload.single('avatar'), async (req, res) => {
+router.post('/api/users/avatar/upload', auth, upload.single('avatar'), async (req, res) => {
 
   try {
 
@@ -304,7 +273,7 @@ router.post('/api/users/user/avatar', auth, upload.single('avatar'), async (req,
 
 
 // Sends delete request to delete the users profile avatar
-router.delete('/api/users/user/avatar', auth, async (req, res) => {
+router.delete('/api/users/avatar/remove', auth, async (req, res) => {
 
   try {
 
@@ -328,11 +297,13 @@ router.delete('/api/users/user/avatar', auth, async (req, res) => {
 
 
 // Sends get request to render profile avatar
-router.get('/api/users/pic-id/:id/avatar', async (req, res) => {
+router.get('/api/users/avatar/view', async (req, res) => {
+
+  const _id = req.query._id
 
   try {
 
-    const user = await User.findById(req.params.id)
+    const user = await User.findById(_id)
 
     if (!user || !user.avatar) throw new Error()
 
