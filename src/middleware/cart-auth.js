@@ -6,9 +6,7 @@ const authCart = async (req, res, next) => {
 
   try {
 
-    const _id = req.query._id
-
-    const cart = await Cart.find({ _id, owner: req.user._id })
+    const cart = await Cart.find({ owner: req.user._id })
 
     if (!cart) return errorJson(res, 404)
 

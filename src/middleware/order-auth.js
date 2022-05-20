@@ -6,9 +6,7 @@ const authOrder = async (req, res, next) => {
 
   try {
 
-    const _id = req.query._id
-
-    const order = await Order.find({ _id, owner: req.user._id })
+    const order = await Order.find({ owner: req.user._id }).sort({ createdAt: -1 })
 
     if (!order) return errorJson(res, 404)
 

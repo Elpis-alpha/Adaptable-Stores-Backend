@@ -70,7 +70,7 @@ router.post('/api/cart/add', auth, cartAuth, async (req, res) => {
 // Sends delete request to remove item from cart
 router.delete('/api/cart/remove', auth, cartAuth, async (req, res) => {
 
-  const _id = req.query._itemID
+  const _id = req.query._id
 
   try {
 
