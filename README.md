@@ -1,1 +1,3 @@
-## Project Name
+## Adaptable Stores
+
+An ecommerse application
