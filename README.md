@@ -1,3 +1,3 @@
 ## Adaptable Stores
 
-An ecommerse application
+An ecommerce application
