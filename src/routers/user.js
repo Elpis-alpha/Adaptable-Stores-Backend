@@ -9,6 +9,8 @@ const User = require('../models/User')
 const auth = require('../middleware/auth')
 
 const { errorJson } = require('../middleware/errors')
+const Cart = require('../models/Cart')
+
 
 
 const router = new express.Router()
@@ -37,11 +39,13 @@ router.post('/api/users/create', async (req, res) => {
 
     await newUser.save()
 
+    const cart = Cart({ items: [], owner: newUser._id })
+
     const token = await newUser.generateAuthToken()
 
     const verifyUser = await newUser.sendVerificationEmail()
 
-    res.status(201).send({ user: newUser, token })
+    res.status(201).send({ user: newUser, token, cart, verifyUser })
 
   } catch (error) {
 

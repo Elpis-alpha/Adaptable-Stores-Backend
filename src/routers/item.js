@@ -2,8 +2,6 @@ const express = require('express')
 
 const Item = require('../models/Item')
 
-const auth = require('../middleware/auth')
-
 const { errorJson } = require('../middleware/errors')
 
 const itemAuth = require('../middleware/item-auth')
